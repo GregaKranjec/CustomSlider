@@ -2,36 +2,12 @@
      get sliders() {
          return this._sliders;
      }
-
      set sliders(value) {
          this._sliders = value;
      }
-     get circle() {
-         return this._circle;
-     }
-
-     set circle(value) {
-         this._circle = value;
-     }
-     get progressCircle() {
-         return this._progressCircle;
-     }
-
-     set progressCircle(value) {
-         this._progressCircle = value;
-     }
-     get currentVal() {
-         return this._currentVal;
-     }
-
-     set currentVal(value) {
-         this._currentVal = value;
-     }
-
     get container() {
         return this._container;
     }
-
     set container(value) {
         this._container = value;
     }
