@@ -23,6 +23,16 @@ let slider = new Slider('#container', [
         max: 1000,
         step: 25,
         radius: 90,
-        progress: 1000
+        progress: 750
+    }, {
+        color: '#02a28d',
+        min: 0,
+        max: 100,
+        step: 1,
+        radius: 110,
+        progress: 85
     }
+
 ])
+
+console.log(slider);

@@ -38,6 +38,7 @@
             slider.circumference =  Math.PI * 2 * slider.radius;
             let steps = (slider.max - slider.min)/slider.step;
             let progress_degree = (slider.progress-slider.min)/slider.max * 360;
+            slider.angle = progress_degree;
             slider.pointer_position = Slider.calculatePointerPosition(this.position, progress_degree, slider.radius)
 
             // create an outer circle
@@ -96,7 +97,7 @@
          this.activeSlider = slider;
          // bind mouse_move to class
          this.handleMouseMove = this.handleMouseMove.bind(this);
-
+         
          // update slider with new value
          const mouse_position = {
              x: e.clientX,
@@ -143,21 +144,31 @@
 
          // calculate degrees on the closest part of the circle
          const position_radians = Math.atan2(delta_y, delta_x);
-         let position_degrees = ((position_radians * 180) / Math.PI) + 90;
-         if(position_degrees < 0) position_degrees += 360;
+         let new_angle = ((position_radians * 180) / Math.PI) + 90;
+         if(new_angle < 0) new_angle += 360;
 
-         // calculate progress
-         const progress_percentage = position_degrees/360;
+         // get current progress percentage and progress
+         let progress_percentage = new_angle/360;
          let progress =  Math.round((this.activeSlider.max - this.activeSlider.min) * progress_percentage + this.activeSlider.min);
 
          // handle minimum change via step
-         this.activeSlider.progress = progress - progress % this.activeSlider.step;
+         progress = progress - progress % this.activeSlider.step;
+         new_angle = (progress-this.activeSlider.min)/this.activeSlider.max * 360;
+
+         // prevent going over maximum into zero or over zero into maximum
+         if(new_angle === 0 && this.activeSlider.angle === ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
+             new_angle = 360;
+         } else if(this.activeSlider.angle === 360 && new_angle !== ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
+             new_angle = 360;
+         } else if(new_angle !== ((this.activeSlider.step)/this.activeSlider.max * 360) && this.activeSlider.angle === 0) {
+             new_angle = 0;
+         }
 
          // recalculate position_degree from minimum step for pointer position calculation
-         position_degrees = (this.activeSlider.progress-this.activeSlider.min)/this.activeSlider.max * 360;
+         this.activeSlider.angle = new_angle;
+         this.activeSlider.progress = Math.round((this.activeSlider.max - this.activeSlider.min) * new_angle/360 + this.activeSlider.min);
 
-         this.activeSlider.pointer_position = Slider.calculatePointerPosition(this.position, position_degrees, this.activeSlider.radius)
-
+         this.activeSlider.pointer_position = Slider.calculatePointerPosition(this.position, new_angle, this.activeSlider.radius)
      }
      /**
       * Update slider with new data
@@ -169,7 +180,6 @@
 
          slider.progress_selector.setAttribute('cx', slider.pointer_position.cx.toString());
          slider.progress_selector.setAttribute('cy', slider.pointer_position.cy.toString());
-
      }
 
      /**
