@@ -37,72 +37,94 @@
             // calculate variables
             slider.circumference =  Math.PI * 2 * slider.radius;
             let steps = (slider.max - slider.min)/slider.step;
-            let progress_degree = (slider.progress-slider.min)/slider.max * 360;
-            slider.angle = progress_degree;
-            slider.pointer_position = Slider.calculatePointerPosition(this.position, progress_degree, slider.radius)
+            slider.angle = (slider.progress-slider.min)/slider.max * 360;
+            slider.pointer_position = Slider.calculatePointerPosition(this.position, slider.angle, slider.radius)
 
-            // create an outer circle
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-            circle.setAttribute('cx', this.position.x.toString());
-            circle.setAttribute('cy', this.position.y.toString());
-            circle.setAttribute('r', slider.radius);
-            circle.setAttribute('stroke', '#ccc');
-            circle.setAttribute('stroke-width', '15');
-            circle.setAttribute('stroke-dasharray', `${(slider.circumference / steps ) - 1}, 1`);
-            circle.setAttribute('fill', 'none');
-            svg.append(circle);
-            slider.circle = circle;
+           slider.circle = this.createSVGCircle({
+                cx:this.position.x.toString(),
+                cy:this.position.y.toString(),
+                r: slider.radius,
+                color: '#ccc',
+                fill: 'none',
+                width: '15',
+                strokeDasharray: `${(slider.circumference / steps ) - 1}, 1`,
+            })
+            svg.append(slider.circle);
 
             //bind object to event
             this.handleMouseDown = this.handleMouseDown.bind(this);
             //bind event to circle element
             slider.circle.addEventListener('mousedown', (e) => this.handleMouseDown(e, slider));
 
+
             // create inner circle representing current selected number
-            const progress_circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-            progress_circle.setAttribute('cx', this.position.x.toString());
-            progress_circle.setAttribute('cy', this.position.y.toString());
-            progress_circle.setAttribute('r', slider.radius);
-            progress_circle.setAttribute('stroke', slider.color);
-            progress_circle.setAttribute('fill', 'none');
-            progress_circle.setAttribute('stroke-width', '15');
-            progress_circle.setAttribute('opacity', '0.5');
-            progress_circle.setAttribute('stroke-dasharray', `${((slider.progress-slider.min)/slider.max) * slider.circumference} ,${slider.circumference}`);
-            progress_circle.classList.add('no_events')
-            svg.append(progress_circle);
-            slider.progress_circle = progress_circle;
+            slider.progress_circle = this.createSVGCircle({
+                cx:this.position.x.toString(),
+                cy:this.position.y.toString(),
+                r: slider.radius,
+                color: slider.color,
+                fill: 'none',
+                width: '15',
+                opacity: '0.5',
+                strokeDasharray: `${((slider.progress-slider.min)/slider.max) * slider.circumference} ,${slider.circumference}`,
+            })
+
+            slider.progress_circle.classList.add('no_events')
+            svg.append(slider.progress_circle);
 
             // create selector
-            let progress_selector = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-            progress_selector.setAttribute('r', '7.5');
-            progress_selector.setAttribute('fill', 'white');
-            progress_selector.setAttribute('stroke', 'black');
-            progress_selector.setAttribute('stroke-width', '1');
-            progress_selector.setAttribute('cx', slider.pointer_position.cx.toString());
-            progress_selector.setAttribute('cy', slider.pointer_position.cy.toString());
-            progress_selector.classList.add('no_events')
-            slider.progress_selector = progress_selector;
+            slider.progress_selector = this.createSVGCircle({
+                cx: slider.pointer_position.cx.toString(),
+                cy: slider.pointer_position.cy.toString(),
+                r: '7.5',
+                fill: 'white',
+                color: 'black',
+                width: '1',
+            })
+            slider.progress_selector.classList.add('no_events')
 
-            svg.append(progress_selector);
+            svg.append(slider.progress_selector);
         }
     }
+
+
+     /**
+      * @param {{r: string, color: string, cx: string, cy: string, width: string, fill: string}} options
+      */
+     createSVGCircle(options) {
+         const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
+         circle.setAttribute('cx', options.cx ? options.cx : '0');
+         circle.setAttribute('cy', options.cy ? options.cy : '0');
+         circle.setAttribute('r', options.r ? options.r : '25');
+         circle.setAttribute('stroke', options.color ? options.color : '#ccc');
+         circle.setAttribute('stroke-width', options.width ? options.width: '15');
+         circle.setAttribute('fill', options.fill ? options.fill : 'none');
+         circle.setAttribute('opacity', options.opacity ? options.opacity : 1);
+
+         if(options.strokeDasharray) {
+             circle.setAttribute('stroke-dasharray', options.strokeDasharray);
+         }
+
+         return circle;
+     }
+
+
 
      /**
       * @param {MouseEvent} e
       * @param {*} slider - selected slider object
       */
      handleMouseDown(e, slider) {
-         e.stopPropagation();
-
          this.activeSlider = slider;
          // bind mouse_move to class
          this.handleMouseMove = this.handleMouseMove.bind(this);
-         
+
          // update slider with new value
          const mouse_position = {
              x: e.clientX,
              y: e.clientY
          }
+
          this.calculatePositionOnCircle(mouse_position);
          this.updateRange(this.activeSlider);
 
@@ -115,9 +137,7 @@
      }
 
      handleMouseMove(e) {
-         e.stopPropagation();
          if(this.activeSlider) {
-            // const svg_rect = e.target.parentElement.getBoundingClientRect();
             const mouse_position = {
                 x: e.clientX,
                 y: e.clientY
@@ -143,8 +163,8 @@
          const delta_y = mouse_y - this.position.y;
 
          // calculate degrees on the closest part of the circle
-         const position_radians = Math.atan2(delta_y, delta_x);
-         let new_angle = ((position_radians * 180) / Math.PI) + 90;
+         const angle_radians = Math.atan2(delta_y, delta_x);
+         let new_angle = ((angle_radians * 180) / Math.PI) + 90;
          if(new_angle < 0) new_angle += 360;
 
          // get current progress percentage and progress
