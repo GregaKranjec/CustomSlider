@@ -1,4 +1,11 @@
  export class Slider {
+     get slider_container() {
+         return this._slider_container;
+     }
+
+     set slider_container(value) {
+         this._slider_container = value;
+     }
      get sliderWidth() {
          return this._sliderWidth;
      }
@@ -34,18 +41,22 @@
         };
 
         // default settings
-        this._sliderWidth = 15;
+        this._sliderWidth = 20;
         this._margin = 5;
+        this._slider_container = null;
 
+        this.changeEvent = new Event('changeValue');
+
+        this.draw_legend();
         this.draw();
 
     }
 
     draw() {
-        let g = document.createElement('g');
-        let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100%; height: 100%;" ></svg>`);
-        g.append(svg);
-        this.container.append(g);
+         this._slider_container = htmlToElement('<div class="slider_container"></div>');
+         let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" ></svg>`);
+         this._slider_container.append(svg);
+         this.container.append(this._slider_container);
 
 
         this.sliders.forEach((slider, ix) => {
@@ -66,12 +77,15 @@
                 fill: 'none',
                 width: this.sliderWidth,
                 strokeDasharray: `${(slider.circumference / steps ) - 1}, 1`,
-            })
+                rotate: true,
+
+           })
             svg.append(slider.circle);
 
             //bind object to event
             this.handleMouseDown = this.handleMouseDown.bind(this);
             this.handleTouchStart = this.handleTouchStart.bind(this);
+            this.handleChangeValue = this.handleChangeValue.bind(this);
             //bind event to circle element
             slider.circle.addEventListener('mousedown', (e) => this.handleMouseDown(e, slider));
             slider.circle.addEventListener('touchstart', (e) => this.handleTouchStart(e, slider));
@@ -87,7 +101,11 @@
                 width: this.sliderWidth,
                 opacity: '0.5',
                 strokeDasharray: `${((slider.progress-slider.min)/slider.max) * slider.circumference} ,${slider.circumference}`,
+                rotate: true,
             })
+
+            slider.progress_circle.addEventListener('changeValue', (e) => this.handleChangeValue(e, slider));
+
 
             slider.progress_circle.classList.add('no_events')
             svg.append(slider.progress_circle);
@@ -100,15 +118,48 @@
                 fill: 'white',
                 color: 'black',
                 width: '1',
+                rotate: false,
             })
             slider.progress_selector.classList.add('no_events')
 
             svg.append(slider.progress_selector);
         });
+
+
+        this.cropSVG(svg);
+    }
+
+
+    draw_legend() {
+        let current_indicators = [];
+         for(let slider of this.sliders){
+             let indicator = (htmlToElement(`
+                <div class="indicator_wrapper">
+                    <div class="indicator" style="background-color:${slider.color}"></div>
+                    <input type="number" min="${slider.min}" max="${slider.max}" value="${slider.progress}" />
+                </div>
+            `));
+
+
+             current_indicators.push(indicator);
+             slider.indicator = indicator.querySelector('input');
+
+         }
+
+
+
+        const legend = document.createElement('div')
+        legend.classList.add('legend');
+        current_indicators.map(x => legend.append(x));
+
+        this.container.append(legend);
+
+
+
     }
 
      /**
-      * @param {{r: string, color: string, cx: string, cy: string, width: string, fill: string, opacity: string, strokeDasharray: string}} options
+      * @param {{r: string, color: string, cx: string, cy: string, width: string, fill: string, opacity: string, strokeDasharray: string, rotate: boolean}} options
       */
      createSVGCircle(options) {
          const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
@@ -122,6 +173,10 @@
 
          if(options.strokeDasharray) {
              circle.setAttribute('stroke-dasharray', options.strokeDasharray);
+         }
+
+         if(options.rotate) {
+             circle.setAttribute('transform', `rotate(-90, ${options.cx} ${options.cy})`)
          }
 
          return circle;
@@ -157,7 +212,7 @@
              y: e.clientY
          }
 
-         this.calculatePositionOnCircle(mouse_position);
+         this.calculatePositionOnCircle(mouse_position, false);
          this.updateRange(this.activeSlider);
 
          // add mouse move event
@@ -169,6 +224,8 @@
      }
 
      handleTouchStart(e, slider) {
+         e.preventDefault();
+         e.stopPropagation();
          this.activeSlider = slider;
          // bind touch_move to class
          this.handleTouchMove = this.handleTouchMove.bind(this);
@@ -179,7 +236,7 @@
              y: e.touches[0].clientY
          }
 
-         this.calculatePositionOnCircle(position);
+         this.calculatePositionOnCircle(position, false);
          this.updateRange(this.activeSlider);
 
          // add mouse touchmove event
@@ -197,33 +254,39 @@
                 y: e.clientY
             }
 
-            this.calculatePositionOnCircle(mouse_position);
+            this.calculatePositionOnCircle(mouse_position, true);
             this.updateRange(this.activeSlider);
          }
      }
 
      handleTouchMove(e) {
+         e.preventDefault();
+         e.stopPropagation();
          if(this.activeSlider) {
              const position = {
                  x: e.touches[0].clientX,
                  y: e.touches[0].clientY
              }
 
-             this.calculatePositionOnCircle(position);
+             this.calculatePositionOnCircle(position, true);
              this.updateRange(this.activeSlider);
          }
+     }
+
+     handleChangeValue(e, slider) {
+         slider.indicator.value = slider.progress;
      }
 
      /**
       * Calculate current position on circle based on current mouse position
       * @param {{x: number, y: number}} mouse_position
       */
-     calculatePositionOnCircle(mouse_position) {
+     calculatePositionOnCircle(mouse_position, isDrag) {
          // calculate mouse position relative to the svg rect
-         const rect = this.container.getBoundingClientRect();
-         const mouse_x = mouse_position.x - rect.left;
+         const rect = this.container.querySelector('svg').getBoundingClientRect();
+         const mouse_x = mouse_position.x - rect.left + rect.width/2 + this.sliderWidth;
          const mouse_y = mouse_position.y - rect.top;
-
+         
          // get delta values of the triangle
          const delta_x = mouse_x - this.position.x;
          const delta_y = mouse_y - this.position.y;
@@ -233,6 +296,7 @@
          let new_angle = ((angle_radians * 180) / Math.PI) + 90;
          if(new_angle < 0) new_angle += 360;
 
+
          // get current progress percentage and progress
          let progress_percentage = new_angle/360;
          let progress =  Math.round((this.activeSlider.max - this.activeSlider.min) * progress_percentage + this.activeSlider.min);
@@ -241,14 +305,17 @@
          progress = progress - progress % this.activeSlider.step;
          new_angle = (progress-this.activeSlider.min)/this.activeSlider.max * 360;
 
-         // prevent going over max into min or over min into max
-         if(new_angle === 0 && this.activeSlider.angle === ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
-             new_angle = 360;
-         } else if(this.activeSlider.angle === 360 && new_angle !== ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
-             new_angle = 360;
-         } else if(new_angle !== ((this.activeSlider.step)/this.activeSlider.max * 360) && this.activeSlider.angle === 0) {
-             new_angle = 0;
+         if(isDrag) {
+             // prevent going over max into min or over min into max
+             if(new_angle === 0 && this.activeSlider.angle === ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
+                 new_angle = 360;
+             } else if(this.activeSlider.angle === 360 && new_angle !== ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
+                 new_angle = 360;
+             } else if(new_angle !== ((this.activeSlider.step)/this.activeSlider.max * 360) && this.activeSlider.angle === 0) {
+                 new_angle = 0;
+             }
          }
+
 
          // recalculate position_degree from minimum step for pointer position calculation
          this.activeSlider.angle = new_angle;
@@ -267,6 +334,8 @@
 
          slider.progress_selector.setAttribute('cx', slider.pointer_position.cx.toString());
          slider.progress_selector.setAttribute('cy', slider.pointer_position.cy.toString());
+
+        slider.progress_circle.dispatchEvent(this.changeEvent);
      }
 
      /**
@@ -275,14 +344,23 @@
       * @param {*} radius
       */
      static calculatePointerPosition(center_point, progress_degree, radius) {
-         let progress_radians = progress_degree * (Math.PI / 180)
+         let progress_radians = (progress_degree-90) * (Math.PI / 180)
 
          return {
              cx: center_point.x + radius * Math.cos(progress_radians),
              cy: center_point.y + radius * Math.sin(progress_radians)
          }
      }
-}
+
+     cropSVG(svgEl) {
+         // Get the bounds of the SVG content
+         const bbox = svgEl.getBBox();
+         // Set the viewport with these bounds
+         svgEl.setAttribute("viewBox", `${bbox.x - this.sliderWidth/2} ${this.sliderWidth/2} ${bbox.width + this.sliderWidth} ${bbox.height + this.sliderWidth}`);
+         svgEl.parentElement.style.width = bbox.width + this.sliderWidth + 'px';
+     }
+
+ }
 
 
 
