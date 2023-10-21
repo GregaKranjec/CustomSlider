@@ -12,11 +12,11 @@ let slider = new Slider('#container', [
         progress: 750
     }, {
         color: '#8d0088',
-        min: 0,
+        min: 200,
         max: 1000,
         step: 100,
         radius: 'max',
-        progress: 300
+        progress: 400
     }, {
         color: '#ff415c',
         min: 0,

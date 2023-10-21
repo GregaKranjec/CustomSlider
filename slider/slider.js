@@ -67,7 +67,8 @@
             // calculate variables
             slider.circumference =  Math.PI * 2 * slider.radius;
             let steps = (slider.max - slider.min)/slider.step;
-            slider.angle = (slider.progress-slider.min)/slider.max * 360;
+            slider.angle = (slider.progress - slider.min)/(slider.max - slider.min) * 360;
+
             slider.pointer_position = Slider.calculatePointerPosition(this.position, slider.angle, slider.radius)
 
            slider.circle = this.createSVGCircle({
@@ -101,9 +102,10 @@
                 fill: 'none',
                 width: this.sliderWidth,
                 opacity: '0.5',
-                strokeDasharray: `${((slider.progress-slider.min)/slider.max) * slider.circumference} ,${slider.circumference}`,
+                strokeDasharray: `${((slider.angle)/360) * slider.circumference} ,${slider.circumference - ((slider.angle)/360) * slider.circumference}`,
                 rotate: true,
-            })
+            });
+
 
             slider.progress_circle.addEventListener('changeValue', (e) => this.handleChangeValue(e, slider));
 
@@ -299,11 +301,11 @@
 
          // get current progress percentage and progress
          let progress_percentage = new_angle/360;
-         let progress =  Math.round((this.activeSlider.max - this.activeSlider.min) * progress_percentage + this.activeSlider.min);
+         let progress =  Math.round((this.activeSlider.max - this.activeSlider.min) * progress_percentage);
 
-         // handle minimum change via step
-         progress = progress - progress % this.activeSlider.step;
-         new_angle = (progress-this.activeSlider.min)/this.activeSlider.max * 360;
+         // handle minimum change via step and handle minimum value offset
+         progress = progress - progress % this.activeSlider.step + (this.activeSlider.min/this.activeSlider.step) * this.activeSlider.step;
+         new_angle = (progress - this.activeSlider.min)/(this.activeSlider.max - this.activeSlider.min) * 360;
 
          if(isDrag) {
              // prevent going over max into min or over min into max
@@ -329,8 +331,12 @@
       * @param {*} slider - slider object to update
       */
      updateRange(slider) {
+
+         /*slider.progress_circle
+             .setAttribute('stroke-dasharray', `${((slider.progress)/slider.max) * slider.circumference} ,${slider.circumference}`);*/
+
          slider.progress_circle
-             .setAttribute('stroke-dasharray', `${((slider.progress-slider.min)/slider.max) * slider.circumference} ,${slider.circumference}`);
+             .setAttribute('stroke-dasharray', `${(slider.angle/360) * slider.circumference} ,${slider.circumference - (slider.angle/360) * slider.circumference}`);
 
          slider.progress_selector.setAttribute('cx', slider.pointer_position.cx.toString());
          slider.progress_selector.setAttribute('cy', slider.pointer_position.cy.toString());
