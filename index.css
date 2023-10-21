@@ -11,7 +11,7 @@ html, body {
     height: 100%;
 }
 
-@media only screen and (min-width: 601px){
+@media only screen and (min-width: 768px){
     #container {
         width: 50vw;
         height: 50vh;
@@ -33,23 +33,26 @@ html, body {
         width: 3em;
         height: 2em;
         border-radius: 0.25em;
-        margin: 0.25em 0.25em 0em 0.25em;
+        margin: 0.25em 0.25em 0 0.25em;
         opacity: 0.75;
     }
 
     .indicator_wrapper {
         display:flex;
-        justify-content: space-between;
+        justify-content: end;
         align-items: center;
     }
 
-    .indicator_wrapper input {
-
+    .indicator_wrapper span {
+        display: block;
+        font-weight: bolder;
+        font-family: sans-serif;
+        width: 2em;
     }
 
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 767px) {
     #container {
         width: 90vw;
         height: 90vh;
@@ -63,6 +66,7 @@ html, body {
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        margin-bottom: 2em;
     }
 
     .indicator {
@@ -76,7 +80,9 @@ html, body {
 
     .indicator_wrapper {
         display: flex;
-
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
     }
 
 
@@ -88,4 +94,7 @@ html, body {
     pointer-events: none;
 }
 
+.slider_container {
+    height: fit-content;
+}
 

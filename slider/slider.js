@@ -41,9 +41,10 @@
         };
 
         // default settings
-        this._sliderWidth = 20;
+        this._sliderWidth = 30;
         this._margin = 5;
         this._slider_container = null;
+        this.mobileMaxWidth = 768;
 
         this.changeEvent = new Event('changeValue');
 
@@ -136,13 +137,13 @@
              let indicator = (htmlToElement(`
                 <div class="indicator_wrapper">
                     <div class="indicator" style="background-color:${slider.color}"></div>
-                    <input type="number" min="${slider.min}" max="${slider.max}" value="${slider.progress}" />
+                    <span>${slider.progress}</span>
                 </div>
             `));
 
 
              current_indicators.push(indicator);
-             slider.indicator = indicator.querySelector('input');
+             slider.indicator = indicator.querySelector('span');
 
          }
 
@@ -274,7 +275,7 @@
      }
 
      handleChangeValue(e, slider) {
-         slider.indicator.value = slider.progress;
+         slider.indicator.innerText = slider.progress;
      }
 
      /**
@@ -284,17 +285,16 @@
      calculatePositionOnCircle(mouse_position, isDrag) {
          // calculate mouse position relative to the svg rect
          const rect = this.container.querySelector('svg').getBoundingClientRect();
-         const mouse_x = mouse_position.x - rect.left + rect.width/2 + this.sliderWidth;
-         const mouse_y = mouse_position.y - rect.top;
-         
-         // get delta values of the triangle
-         const delta_x = mouse_x - this.position.x;
-         const delta_y = mouse_y - this.position.y;
 
-         // calculate degrees on the closest part of the circle
-         const angle_radians = Math.atan2(delta_y, delta_x);
+         // rect center point
+         const centerX = rect.left + rect.width / 2;
+         const centerY = rect.top + rect.height / 2;
+
+         // calculate the angle
+         let angle_radians = Math.atan2(mouse_position.y - centerY,  mouse_position.x - centerX);
          let new_angle = ((angle_radians * 180) / Math.PI) + 90;
          if(new_angle < 0) new_angle += 360;
+         if(new_angle > 360) new_angle -= 360;
 
 
          // get current progress percentage and progress
@@ -356,7 +356,13 @@
          // Get the bounds of the SVG content
          const bbox = svgEl.getBBox();
          // Set the viewport with these bounds
-         svgEl.setAttribute("viewBox", `${bbox.x - this.sliderWidth/2} ${this.sliderWidth/2} ${bbox.width + this.sliderWidth} ${bbox.height + this.sliderWidth}`);
+         if(window.innerWidth <= this.mobileMaxWidth) {
+             svgEl.setAttribute("viewBox", `${bbox.x - this.sliderWidth/2} ${bbox.y - this.sliderWidth/2} ${bbox.width + this.sliderWidth} ${bbox.height + this.sliderWidth}`);
+
+         } else {
+             svgEl.setAttribute("viewBox", `${bbox.x - this.sliderWidth/2} ${this.sliderWidth/2} ${bbox.width + this.sliderWidth} ${bbox.height + this.sliderWidth}`);
+
+         }
          svgEl.parentElement.style.width = bbox.width + this.sliderWidth + 'px';
      }
 
