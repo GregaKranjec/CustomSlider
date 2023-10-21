@@ -19,6 +19,7 @@
     }
     constructor(container, sliders) {
         this._container = document.querySelector(container);
+        this.container.classList.add('slider_container')
         this._sliders = sliders;
         this._position = {
             x: parseInt(getComputedStyle(this.container).width) / 2,
@@ -30,8 +31,11 @@
     }
 
     draw() {
-        let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100%; height: 100%;" transform="rotate(-90, 0, 0)"></svg>`);
-        this.container.append(svg);
+        let g = document.createElement('g');
+        let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100%; height: 100%;" ></svg>`);
+        g.append(svg);
+        this.container.append(g);
+
 
         for(let slider of this.sliders) {
             // calculate variables
@@ -89,7 +93,7 @@
 
 
      /**
-      * @param {{r: string, color: string, cx: string, cy: string, width: string, fill: string}} options
+      * @param {{r: string, color: string, cx: string, cy: string, width: string, fill: string, opacity: string, strokeDasharray: string}} options
       */
      createSVGCircle(options) {
          const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
@@ -99,7 +103,7 @@
          circle.setAttribute('stroke', options.color ? options.color : '#ccc');
          circle.setAttribute('stroke-width', options.width ? options.width: '15');
          circle.setAttribute('fill', options.fill ? options.fill : 'none');
-         circle.setAttribute('opacity', options.opacity ? options.opacity : 1);
+         circle.setAttribute('opacity', options.opacity ? options.opacity : '1');
 
          if(options.strokeDasharray) {
              circle.setAttribute('stroke-dasharray', options.strokeDasharray);
@@ -175,7 +179,7 @@
          progress = progress - progress % this.activeSlider.step;
          new_angle = (progress-this.activeSlider.min)/this.activeSlider.max * 360;
 
-         // prevent going over maximum into zero or over zero into maximum
+         // prevent going over max into min or over min into max
          if(new_angle === 0 && this.activeSlider.angle === ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
              new_angle = 360;
          } else if(this.activeSlider.angle === 360 && new_angle !== ((this.activeSlider.max-this.activeSlider.step-this.activeSlider.min)/this.activeSlider.max * 360)) {
