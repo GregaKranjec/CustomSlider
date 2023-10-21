@@ -1,4 +1,11 @@
  export class Slider {
+     get sliderWidth() {
+         return this._sliderWidth;
+     }
+
+     set sliderWidth(value) {
+         this._sliderWidth = value;
+     }
      get position() {
          return this._position;
      }
@@ -26,6 +33,10 @@
             y: parseInt(getComputedStyle(this.container).height) / 2
         };
 
+        // default settings
+        this._sliderWidth = 15;
+        this._margin = 5;
+
         this.draw();
 
     }
@@ -37,7 +48,10 @@
         this.container.append(g);
 
 
-        for(let slider of this.sliders) {
+        this.sliders.forEach((slider, ix) => {
+            // determine slider radius if needed
+            if(slider.radius === 'max') slider.radius = this.calculateRadius(ix);
+            if(slider.radius < 0) return;
             // calculate variables
             slider.circumference =  Math.PI * 2 * slider.radius;
             let steps = (slider.max - slider.min)/slider.step;
@@ -50,15 +64,17 @@
                 r: slider.radius,
                 color: '#ccc',
                 fill: 'none',
-                width: '15',
+                width: this.sliderWidth,
                 strokeDasharray: `${(slider.circumference / steps ) - 1}, 1`,
             })
             svg.append(slider.circle);
 
             //bind object to event
             this.handleMouseDown = this.handleMouseDown.bind(this);
+            this.handleTouchStart = this.handleTouchStart.bind(this);
             //bind event to circle element
             slider.circle.addEventListener('mousedown', (e) => this.handleMouseDown(e, slider));
+            slider.circle.addEventListener('touchstart', (e) => this.handleTouchStart(e, slider));
 
 
             // create inner circle representing current selected number
@@ -68,7 +84,7 @@
                 r: slider.radius,
                 color: slider.color,
                 fill: 'none',
-                width: '15',
+                width: this.sliderWidth,
                 opacity: '0.5',
                 strokeDasharray: `${((slider.progress-slider.min)/slider.max) * slider.circumference} ,${slider.circumference}`,
             })
@@ -88,9 +104,8 @@
             slider.progress_selector.classList.add('no_events')
 
             svg.append(slider.progress_selector);
-        }
+        });
     }
-
 
      /**
       * @param {{r: string, color: string, cx: string, cy: string, width: string, fill: string, opacity: string, strokeDasharray: string}} options
@@ -110,6 +125,19 @@
          }
 
          return circle;
+     }
+
+     calculateRadius(ix) {
+         let width = this.container.clientWidth;
+         let height = this.container.clientHeight;
+         let r;
+         if(width < height)
+             r = ((width/2) - ix * (this.sliderWidth + this._margin)) - this.sliderWidth;
+          else
+             r = ((height/2) - ix * (this.sliderWidth + this._margin)) - this.sliderWidth;
+
+         if(r > 0) return r
+         else return -1
      }
 
 
@@ -140,6 +168,28 @@
          });
      }
 
+     handleTouchStart(e, slider) {
+         this.activeSlider = slider;
+         // bind touch_move to class
+         this.handleTouchMove = this.handleTouchMove.bind(this);
+
+         // update slider with new value
+         const position = {
+             x: e.touches[0].clientX,
+             y: e.touches[0].clientY
+         }
+
+         this.calculatePositionOnCircle(position);
+         this.updateRange(this.activeSlider);
+
+         // add mouse touchmove event
+         document.addEventListener('touchmove', this.handleTouchMove);
+         // remove move event after end of touch
+         document.addEventListener('touchend', (event) => {
+             document.removeEventListener('touchmove', this.handleTouchMove)
+         });
+     }
+
      handleMouseMove(e) {
          if(this.activeSlider) {
             const mouse_position = {
@@ -149,6 +199,18 @@
 
             this.calculatePositionOnCircle(mouse_position);
             this.updateRange(this.activeSlider);
+         }
+     }
+
+     handleTouchMove(e) {
+         if(this.activeSlider) {
+             const position = {
+                 x: e.touches[0].clientX,
+                 y: e.touches[0].clientY
+             }
+
+             this.calculatePositionOnCircle(position);
+             this.updateRange(this.activeSlider);
          }
      }
 
@@ -194,6 +256,7 @@
 
          this.activeSlider.pointer_position = Slider.calculatePointerPosition(this.position, new_angle, this.activeSlider.radius)
      }
+
      /**
       * Update slider with new data
       * @param {*} slider - slider object to update

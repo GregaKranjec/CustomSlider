@@ -8,31 +8,29 @@ let slider = new Slider('#container', [
         min: 0,
         max: 1000,
         step: 25,
-        radius: 50,
+        radius: 'max',
         progress: 750
     }, {
         color: '#8d0088',
         min: 0,
         max: 1000,
         step: 100,
-        radius: 70,
+        radius: 'max',
         progress: 300
     }, {
         color: '#ff415c',
         min: 0,
         max: 1000,
         step: 25,
-        radius: 90,
+        radius: 'max',
         progress: 750
     }, {
         color: '#02a28d',
         min: 0,
         max: 100,
         step: 1,
-        radius: 110,
+        radius: 'max',
         progress: 85
-    }
+    }]
+)
 
-])
-
-console.log(slider);
