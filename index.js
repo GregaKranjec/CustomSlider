@@ -31,6 +31,13 @@ let slider = new Slider('#container', [
         step: 1,
         radius: 'max',
         progress: 85
+    }, {
+        color: 'orange',
+        min: 0,
+        max: 5000,
+        step: 25,
+        radius: 'max',
+        progress: 85
     }]
 )
 

@@ -42,7 +42,7 @@
         // default settings
         this._sliderWidth = 30;
         this._margin = 5;
-        this._slider_container = null;
+        this._sliderContainer = null;
         this._mobileMaxWidth = 800;
 
         this._changeEvent = new Event('changeValue');
@@ -51,10 +51,12 @@
      draw() {
         this.draw_legend();
 
-        this.slider_container = htmlToElement('<div class="slider_container"></div>');
-        let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" ></svg>`);
-        this.slider_container.append(svg);
-        this.container.append(this.slider_container);
+        this.sliderContainer = htmlToElement('<div class="slider_container"></div>');
+        let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" >
+            
+        </svg>`);
+        this.sliderContainer.append(svg);
+        this.container.append(this.sliderContainer);
 
         this.sliders.forEach((slider, ix) => {
             // determine slider radius if needed
@@ -75,9 +77,21 @@
                 width: this.sliderWidth.toString(),
                 strokeDasharray: `${(slider.circumference / steps ) - 1}, 1`,
                 rotate: true,
-
            })
             svg.append(slider.circle);
+
+            // strokeDasharray make a circle with gaps in between, any events triggered on it won't be detected if user clicks on the gap between sections
+            // to combat this we use a trigger circle which is transparent and listens to events that will then affect the actual slider.
+            slider.triggerCircle = this.createSVGCircle({
+                cx:this.position.x.toString(),
+                cy:this.position.y.toString(),
+                r: slider.radius,
+                color: 'transparent',
+                fill: 'none',
+                width: this.sliderWidth.toString(),
+                rotate: true,
+            })
+            svg.append(slider.triggerCircle);
 
             //bind class to all events
             this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -86,8 +100,8 @@
             this.handleDragStop = this.handleDragStop.bind(this);
             this.handleTouchMove = this.handleTouchMove.bind(this);
             //bind event to circle element
-            slider.circle.addEventListener('mousedown', (e) => this.handleMouseDown(e, slider));
-            slider.circle.addEventListener('touchstart', (e) => this.handleTouchStart(e, slider));
+            slider.triggerCircle.addEventListener('mousedown', (e) => this.handleMouseDown(e, slider));
+            slider.triggerCircle.addEventListener('touchstart', (e) => this.handleTouchStart(e, slider));
 
             // remove move event after end of touch
             document.addEventListener('touchend', (event) => {
