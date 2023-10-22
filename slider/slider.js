@@ -53,8 +53,7 @@
 
         this.sliderContainer = htmlToElement('<div class="slider_container"></div>');
         let svg = htmlToElement(`<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" >
-            
-        </svg>`);
+            </svg>`);
         this.sliderContainer.append(svg);
         this.container.append(this.sliderContainer);
 
@@ -366,11 +365,14 @@
      }
 
      handleDragStop(e) {
-         this.activeSlider.progress =  this.activeSlider.progress -  this.activeSlider.progress % this.activeSlider.step;
-         this.activeSlider.angle = (this.activeSlider.progress - this.activeSlider.min)/(this.activeSlider.max - this.activeSlider.min) * 360;
-         this.activeSlider.pointer_position = Slider.calculatePointerPosition(this.position, this.activeSlider.angle, this.activeSlider.radius);
-         this.updateRange(this.activeSlider);
-         this.activeSlider = null;
+         if(this.activeSlider) {
+             this.activeSlider.progress =  this.activeSlider.progress -  this.activeSlider.progress % this.activeSlider.step;
+             this.activeSlider.angle = (this.activeSlider.progress - this.activeSlider.min)/(this.activeSlider.max - this.activeSlider.min) * 360;
+             this.activeSlider.pointer_position = Slider.calculatePointerPosition(this.position, this.activeSlider.angle, this.activeSlider.radius);
+             this.updateRange(this.activeSlider);
+             this.activeSlider = null;
+         }
+
      }
 
      handleChangeValue(e, slider) {

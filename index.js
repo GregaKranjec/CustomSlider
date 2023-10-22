@@ -18,13 +18,6 @@ let slider = new Slider('#container', [
         radius: 'max',
         progress: 400
     }, {
-        color: '#ff415c',
-        min: 0,
-        max: 1000,
-        step: 200,
-        radius: 'max',
-        progress: 750
-    }, {
         color: '#02a28d',
         min: 0,
         max: 100,
