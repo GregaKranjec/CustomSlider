@@ -11,7 +11,7 @@ html, body {
     height: 100%;
 }
 
-@media only screen and (min-width: 768px){
+@media only screen and (min-width: 801px){
     #container {
         width: 50vw;
         height: 50vh;
@@ -52,13 +52,15 @@ html, body {
 
 }
 
-@media only screen and (max-width: 767px) {
+@media only screen and (max-width: 800px) {
     #container {
         width: 90vw;
         height: 90vh;
         overflow:hidden;
         display:flex;
         flex-direction: column;
+        align-items: center;
+        justify-content:center;
     }
 
     .legend {
@@ -85,10 +87,14 @@ html, body {
         align-items: center;
     }
 
-
+    .indicator_wrapper span {
+        display: block;
+        font-weight: bolder;
+        font-family: sans-serif;
+        width: 2em;
+        text-align: center;
+    }
 }
-
-
 
 .no_events {
     pointer-events: none;

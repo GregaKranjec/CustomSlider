@@ -21,7 +21,7 @@ let slider = new Slider('#container', [
         color: '#ff415c',
         min: 0,
         max: 1000,
-        step: 25,
+        step: 200,
         radius: 'max',
         progress: 750
     }, {
@@ -34,3 +34,4 @@ let slider = new Slider('#container', [
     }]
 )
 
+slider.draw();
